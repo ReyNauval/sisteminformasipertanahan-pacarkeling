@@ -1,149 +1,8 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Peta Informasi Pertanahan</title>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
-
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Segoe UI,Tahoma,sans-serif}
-#map{width:100vw;height:100vh}
-
-/* HEADER */
-.header{
- position:absolute;top:0;left:0;right:0;
- background:linear-gradient(135deg,#2e7d32,#43a047);
- color:white;z-index:1000;padding:14px;text-align:center
-}
-.header h1{font-size:20px;font-weight:600;letter-spacing:1px}
-
-/* BACK HOME */
-.home-link{
- position:absolute;top:15px;left:20px;
- background:linear-gradient(135deg,#ff9800,#ff5722);
- color:white;padding:6px 12px;border-radius:20px;
- text-decoration:none;font-size:12px;font-weight:600
-}
-
-/* TOOLBAR */
-.toolbar{
- position:absolute;top:90px;right:15px;
- display:flex;flex-direction:column;gap:6px;z-index:1000
-}
-.tool-btn{
- width:42px;height:42px;
- background:white;border-radius:6px;
- display:flex;align-items:center;justify-content:center;
- cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)
-}
-.tool-btn:hover{background:#e3f2fd}
-
-/* PANEL */
-.panel{
- position:absolute;top:90px;right:70px;
- background:white;border-radius:8px;
- padding:12px;min-width:200px;
- box-shadow:0 2px 15px rgba(0,0,0,.3);
- display:none;z-index:999
-}
-.panel h4{margin-bottom:8px;color:#2e7d32}
-
-/* INFO */
-.info-box{
- position:absolute;top:90px;left:20px;
- background:white;padding:12px;border-radius:8px;
- box-shadow:0 2px 15px rgba(0,0,0,.3);
- z-index:999;font-size:13px
-}
-
-/* LEGEND */
-.legend-item{display:flex;align-items:center;margin-bottom:6px;font-size:12px}
-.legend-color{width:20px;height:12px;margin-right:8px;border:1px solid #444}
-
-/* SCALE + COORD */
-.bottom-right{
- position:absolute;bottom:10px;right:10px;
- background:white;padding:6px 10px;
- border-radius:6px;font-size:11px;
- box-shadow:0 2px 8px rgba(0,0,0,.3)
-}
-
-/* NORTH */
-.north{
- position:absolute;bottom:70px;right:15px;
- font-size:28px;font-weight:bold;color:red;
- z-index:999
-}
-</style>
-</head>
-
-<body>
-
-<div class="header">
- <a href="#" class="home-link">Kembali ke Beranda</a>
- <h1>
-  TA INFORMASI PERTANAHAN<br>
-  KELURAHAN PACARKELING, KECAMATAN TAMBAKSARI
- </h1>
-</div>
-
-<div id="map"></div>
-
-<div class="info-box">
- <b>Informasi Pertanahan</b><br><br>
- Jumlah Bidang: <b>2014</b><br>
- Total Luas: <b>1.169.334,229 m²</b><br>
- (116,933 ha)
-</div>
-
-<!-- TOOLBAR -->
-<div class="toolbar">
- <div class="tool-btn" onclick="togglePanel('basemapPanel')">🗺️</div>
- <div class="tool-btn" onclick="togglePanel('layerPanel')">🧱</div>
- <div class="tool-btn" onclick="togglePanel('legendPanel')">📘</div>
- <div class="tool-btn" onclick="togglePanel('measurePanel')">📏</div>
- <div class="tool-btn" onclick="map.zoomIn()">➕</div>
- <div class="tool-btn" onclick="map.zoomOut()">➖</div>
-</div>
-
-<!-- PANELS -->
-<div class="panel" id="basemapPanel">
- <h4>Basemap</h4>
- <label><input type="radio" name="bm" checked onclick="setBasemap('osm')"> OSM</label><br>
- <label><input type="radio" name="bm" onclick="setBasemap('carto')"> Carto</label><br>
- <label><input type="radio" name="bm" onclick="setBasemap('esri')"> Esri</label>
-</div>
-
-<div class="panel" id="layerPanel">
- <h4>Layer</h4>
- <label><input type="checkbox" checked onclick="toggleLayer(persilLayer)"> Persil</label><br>
- <label><input type="checkbox" onclick="toggleLayer(jalanLayer)"> Jalan</label><br>
- <label><input type="checkbox" onclick="toggleLayer(batasLayer)"> Batas</label>
-</div>
-
-<div class="panel" id="legendPanel">
- <h4>Legenda</h4>
- <div id="legendContent"></div>
-</div>
-
-<div class="panel" id="measurePanel">
- <h4>Pengukuran</h4>
- <button onclick="drawLine()">Ukur Panjang</button><br><br>
- <button onclick="drawPolygon()">Ukur Luas</button>
-</div>
-
-<div class="north">N</div>
-<div class="bottom-right" id="coord">Lat: -, Lng: -</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-
 <script>
-const map=L.map('map').setView([-7.2499,112.7532],15);
+/* ================= MAP ================= */
+const map = L.map('map').setView([-7.2499,112.7532],15);
+
+/* ================= BASEMAP ================= */
 const basemaps={
  osm:L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
  carto:L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'),
@@ -151,58 +10,128 @@ const basemaps={
 };
 basemaps.osm.addTo(map);
 
-function setBasemap(k){
- Object.values(basemaps).forEach(b=>map.removeLayer(b));
- basemaps[k].addTo(map);
+/* ================= ELEMENT ================= */
+const layerPersil  = document.getElementById("layerPersil");
+const layerBangunan= document.getElementById("layerBangunan");
+const layerJalan   = document.getElementById("layerJalan");
+const layerKereta  = document.getElementById("layerKereta");
+const layerBatas   = document.getElementById("layerBatas");
+
+/* ================= COLOR ================= */
+const palette=["#FFD700","#FF6B6B","#90EE90","#87CEEB","#DDA0DD"];
+let colorMap={};
+function getColor(j){
+ if(!colorMap[j]) colorMap[j]=palette[Object.keys(colorMap).length%palette.length];
+ return colorMap[j];
 }
 
-let persilLayer,jalanLayer,batasLayer;
-fetch("geojson/persil.geojson").then(r=>r.json()).then(d=>{
- persilLayer=L.geoJSON(d,{style:{fillColor:"#ce93d8",color:"#000",weight:1,fillOpacity:.6}}).addTo(map);
- buildLegend();
-});
-fetch("geojson/jalan.geojson").then(r=>r.json()).then(d=>{
- jalanLayer=L.geoJSON(d,{style:{color:"#e53935",weight:3}}).addTo(map);
-});
-fetch("geojson/batas.geojson").then(r=>r.json()).then(d=>{
- batasLayer=L.geoJSON(d,{style:{color:"#000",weight:2,fillOpacity:0}}).addTo(map);
-});
-
-function toggleLayer(l){map.hasLayer(l)?map.removeLayer(l):map.addLayer(l)}
-
-function togglePanel(id){
- document.querySelectorAll('.panel').forEach(p=>p.style.display="none");
- const el=document.getElementById(id);
- el.style.display=el.style.display==="block"?"none":"block";
+/* ================= HIGHLIGHT ================= */
+let activeLayer=null;
+function highlight(l){
+ if(activeLayer) persilLayer.resetStyle(activeLayer);
+ l.setStyle({weight:4,color:'#000',fillOpacity:.9});
+ map.fitBounds(l.getBounds());
+ activeLayer=l;
 }
 
-function buildLegend(){
- const L=document.getElementById("legendContent");
- L.innerHTML=`
- <div class="legend-item"><div class="legend-color" style="background:#ce93d8"></div>Tanah</div>
- <div class="legend-item"><div class="legend-color" style="background:#e53935"></div>Jalan</div>
-`;
-}
+/* ================= PATH ================= */
+const PATH="geojson/";
 
-map.on('mousemove',e=>{
- document.getElementById("coord").innerHTML=
- `Lat: ${e.latlng.lat.toFixed(5)}, Lng: ${e.latlng.lng.toFixed(5)}`;
+/* ================= LAYERS ================= */
+let persilLayer,bangunanLayer,jalanLayer,keretaLayer,batasLayer;
+
+/* ================= PERSIL ================= */
+fetch(PATH+"persil.geojson")
+.then(r=>{
+ if(!r.ok) throw new Error("persil.geojson tidak ditemukan");
+ return r.json();
+})
+.then(data=>{
+ persilLayer=L.geoJSON(data,{
+  style:f=>({
+   fillColor:getColor(f.properties.JENIS),
+   color:'#333',weight:1,fillOpacity:.7
+  }),
+  onEachFeature:(f,l)=>{
+   let html="";
+   for(let k in f.properties){
+    html+=`<b>${k}</b>: ${f.properties[k]}<br>`;
+   }
+   l.bindPopup(html);
+   l.on('click',()=>highlight(l));
+  }
+ }).addTo(map);
+
+ bangunanLayer=L.geoJSON(data,{
+  filter:f=>f.properties.JENIS==="building",
+  style:{fillColor:"#FF6B6B",color:"#8B0000",weight:2,fillOpacity:.8}
+ });
+
+ document.getElementById("totalBidang").innerText=data.features.length;
+ buildLegend(data);
 });
 
-const drawnItems=new L.FeatureGroup().addTo(map);
-const drawControl=new L.Control.Draw({edit:{featureGroup:drawnItems},draw:false});
-map.addControl(drawControl);
-
-function drawLine(){
- new L.Draw.Polyline(map).enable();
-}
-function drawPolygon(){
- new L.Draw.Polygon(map).enable();
-}
-map.on(L.Draw.Event.CREATED,e=>{
- drawnItems.addLayer(e.layer);
+/* ================= JALAN ================= */
+fetch(PATH+"jalan.geojson")
+.then(r=>r.json())
+.then(d=>{
+ jalanLayer=L.geoJSON(d,{style:{color:"#000",weight:4}}).addTo(map);
 });
+
+/* ================= KERETA ================= */
+fetch(PATH+"kereta.geojson")
+.then(r=>r.json())
+.then(d=>{
+ keretaLayer=L.geoJSON(d,{style:{color:"blue",weight:3,dashArray:"8,4"}}).addTo(map);
+});
+
+/* ================= BATAS ================= */
+fetch(PATH+"batas.geojson")
+.then(r=>r.json())
+.then(d=>{
+ batasLayer=L.geoJSON(d,{style:{color:"red",weight:4,fillOpacity:0}}).addTo(map);
+});
+
+/* ================= TOGGLE ================= */
+layerPersil.onchange = e => {
+ if(!persilLayer) return;
+ e.target.checked ? map.addLayer(persilLayer) : map.removeLayer(persilLayer);
+};
+layerBangunan.onchange = e => {
+ if(!bangunanLayer) return;
+ e.target.checked ? map.addLayer(bangunanLayer) : map.removeLayer(bangunanLayer);
+};
+layerJalan.onchange = e => {
+ if(!jalanLayer) return;
+ e.target.checked ? map.addLayer(jalanLayer) : map.removeLayer(jalanLayer);
+};
+layerKereta.onchange = e => {
+ if(!keretaLayer) return;
+ e.target.checked ? map.addLayer(keretaLayer) : map.removeLayer(keretaLayer);
+};
+layerBatas.onchange = e => {
+ if(!batasLayer) return;
+ e.target.checked ? map.addLayer(batasLayer) : map.removeLayer(batasLayer);
+};
+
+/* ================= BASEMAP SWITCH ================= */
+document.querySelectorAll('input[name=basemap]').forEach(r=>{
+ r.onchange=()=>{
+  Object.values(basemaps).forEach(b=>map.removeLayer(b));
+  basemaps[r.value].addTo(map);
+ };
+});
+
+/* ================= LEGEND ================= */
+function buildLegend(data){
+ const legend=document.getElementById("legendContent");
+ legend.innerHTML="";
+ [...new Set(data.features.map(f=>f.properties.JENIS))].forEach(j=>{
+  legend.innerHTML+=`
+   <div class="legend-item">
+    <div class="legend-symbol" style="background:${getColor(j)}"></div>
+    ${j.toUpperCase()}
+   </div>`;
+ });
+}
 </script>
-
-</body>
-</html>
