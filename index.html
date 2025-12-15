@@ -1,6 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peta Informasi Pertanahan</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"/>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Segoe UI,Tahoma,sans-serif;overflow:hidden}
+#map{width:100vw;height:100vh}
+
+/* HEADER */
+.header{
+ position:absolute;top:0;left:0;right:0;
+ background:linear-gradient(135deg,#1e5799,#207cca,#2989d8);
+ color:#fff;padding:15px 20px;z-index:1000
+}
+.header h1{font-size:20px;letter-spacing:2px}
+.header .subtitle{font-size:11px;margin-top:4px}
+
+/* PANEL */
+.info-panel,.basemap-control,.layer-control,.legend{
+ position:absolute;background:#fff;padding:15px;border-radius:8px;
+ box-shadow:0 2px 15px rgba(0,0,0,.2);z-index:999
+}
+.info-panel{top:90px;left:20px}
+.basemap-control{top:90px;right:20px}
+.layer-control{top:230px;right:20px}
+.legend{top:50%;left:20px;transform:translateY(-50%)}
+
+.legend-item{display:flex;align-items:center;font-size:12px;margin-bottom:6px}
+.legend-symbol{width:24px;height:14px;margin-right:8px;border:1px solid #555}
+.legend-line{width:24px;height:3px;margin-right:8px}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+ <h1>PETA INFORMASI PERTANAHAN</h1>
+ <div class="subtitle">
+  KELURAHAN PACARKELING, KECAMATAN TAMBAKSARI
+ </div>
+</div>
+
+<div class="info-panel">
+ <b>Informasi</b><br>
+ Jumlah Bidang: <strong id="totalBidang">-</strong>
+</div>
+
+<div class="basemap-control">
+ <b>Basemap</b><br>
+ <label><input type="radio" name="basemap" value="osm" checked> OSM</label><br>
+ <label><input type="radio" name="basemap" value="carto"> Carto</label><br>
+ <label><input type="radio" name="basemap" value="esri"> Esri</label>
+</div>
+
+<div class="layer-control">
+ <b>Layer</b><br>
+ <label><input type="checkbox" id="layerPersil" checked> Persil</label><br>
+ <label><input type="checkbox" id="layerBangunan"> Bangunan</label><br>
+ <label><input type="checkbox" id="layerJalan"> Jalan</label><br>
+ <label><input type="checkbox" id="layerKereta"> Kereta</label><br>
+ <label><input type="checkbox" id="layerBatas"> Batas</label>
+</div>
+
+<div class="legend">
+ <b>Legenda</b>
+ <div id="legendContent"></div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
 <script>
 /* ================= MAP ================= */
-const map = L.map('map').setView([-7.2499,112.7532],15);
+const map=L.map('map').setView([-7.2499,112.7532],15);
 
 /* ================= BASEMAP ================= */
 const basemaps={
@@ -10,14 +88,7 @@ const basemaps={
 };
 basemaps.osm.addTo(map);
 
-/* ================= ELEMENT ================= */
-const layerPersil  = document.getElementById("layerPersil");
-const layerBangunan= document.getElementById("layerBangunan");
-const layerJalan   = document.getElementById("layerJalan");
-const layerKereta  = document.getElementById("layerKereta");
-const layerBatas   = document.getElementById("layerBatas");
-
-/* ================= COLOR ================= */
+/* ================= COLOR AUTO ================= */
 const palette=["#FFD700","#FF6B6B","#90EE90","#87CEEB","#DDA0DD"];
 let colorMap={};
 function getColor(j){
@@ -34,19 +105,12 @@ function highlight(l){
  activeLayer=l;
 }
 
-/* ================= PATH ================= */
+/* ================= LOAD DATA ================= */
 const PATH="geojson/";
 
-/* ================= LAYERS ================= */
 let persilLayer,bangunanLayer,jalanLayer,keretaLayer,batasLayer;
 
-/* ================= PERSIL ================= */
-fetch(PATH+"persil.geojson")
-.then(r=>{
- if(!r.ok) throw new Error("persil.geojson tidak ditemukan");
- return r.json();
-})
-.then(data=>{
+fetch(PATH+"persil.geojson").then(r=>r.json()).then(data=>{
  persilLayer=L.geoJSON(data,{
   style:f=>({
    fillColor:getColor(f.properties.JENIS),
@@ -71,48 +135,22 @@ fetch(PATH+"persil.geojson")
  buildLegend(data);
 });
 
-/* ================= JALAN ================= */
-fetch(PATH+"jalan.geojson")
-.then(r=>r.json())
-.then(d=>{
- jalanLayer=L.geoJSON(d,{style:{color:"#000",weight:4}}).addTo(map);
+fetch(PATH+"jalan.geojson").then(r=>r.json()).then(d=>{
+ jalanLayer=L.geoJSON(d,{style:{color:"#000",weight:4}});
 });
-
-/* ================= KERETA ================= */
-fetch(PATH+"kereta.geojson")
-.then(r=>r.json())
-.then(d=>{
- keretaLayer=L.geoJSON(d,{style:{color:"blue",weight:3,dashArray:"8,4"}}).addTo(map);
+fetch(PATH+"kereta.geojson").then(r=>r.json()).then(d=>{
+ keretaLayer=L.geoJSON(d,{style:{color:"blue",weight:3,dashArray:"8,4"}});
 });
-
-/* ================= BATAS ================= */
-fetch(PATH+"batas.geojson")
-.then(r=>r.json())
-.then(d=>{
- batasLayer=L.geoJSON(d,{style:{color:"red",weight:4,fillOpacity:0}}).addTo(map);
+fetch(PATH+"batas.geojson").then(r=>r.json()).then(d=>{
+ batasLayer=L.geoJSON(d,{style:{color:"red",weight:4,fillOpacity:0}});
 });
 
 /* ================= TOGGLE ================= */
-layerPersil.onchange = e => {
- if(!persilLayer) return;
- e.target.checked ? map.addLayer(persilLayer) : map.removeLayer(persilLayer);
-};
-layerBangunan.onchange = e => {
- if(!bangunanLayer) return;
- e.target.checked ? map.addLayer(bangunanLayer) : map.removeLayer(bangunanLayer);
-};
-layerJalan.onchange = e => {
- if(!jalanLayer) return;
- e.target.checked ? map.addLayer(jalanLayer) : map.removeLayer(jalanLayer);
-};
-layerKereta.onchange = e => {
- if(!keretaLayer) return;
- e.target.checked ? map.addLayer(keretaLayer) : map.removeLayer(keretaLayer);
-};
-layerBatas.onchange = e => {
- if(!batasLayer) return;
- e.target.checked ? map.addLayer(batasLayer) : map.removeLayer(batasLayer);
-};
+layerPersil.onchange=e=>e.target.checked?map.addLayer(persilLayer):map.removeLayer(persilLayer);
+layerBangunan.onchange=e=>e.target.checked?map.addLayer(bangunanLayer):map.removeLayer(bangunanLayer);
+layerJalan.onchange=e=>e.target.checked?map.addLayer(jalanLayer):map.removeLayer(jalanLayer);
+layerKereta.onchange=e=>e.target.checked?map.addLayer(keretaLayer):map.removeLayer(keretaLayer);
+layerBatas.onchange=e=>e.target.checked?map.addLayer(batasLayer):map.removeLayer(batasLayer);
 
 /* ================= BASEMAP SWITCH ================= */
 document.querySelectorAll('input[name=basemap]').forEach(r=>{
@@ -122,7 +160,7 @@ document.querySelectorAll('input[name=basemap]').forEach(r=>{
  };
 });
 
-/* ================= LEGEND ================= */
+/* ================= LEGEND AUTO ================= */
 function buildLegend(data){
  const legend=document.getElementById("legendContent");
  legend.innerHTML="";
@@ -135,3 +173,6 @@ function buildLegend(data){
  });
 }
 </script>
+
+</body>
+</html>
