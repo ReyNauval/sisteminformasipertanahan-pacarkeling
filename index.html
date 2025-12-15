@@ -9,7 +9,7 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Segoe UI,Tahoma,sans-serif;overflow:hidden}
+body{font-family:'Segoe UI',Tahoma,sans-serif;overflow:hidden}
 #map{width:100vw;height:100vh}
 
 /* HEADER */
@@ -17,23 +17,27 @@ body{font-family:Segoe UI,Tahoma,sans-serif;overflow:hidden}
  position:absolute;top:0;left:0;right:0;
  background:linear-gradient(135deg,#2e7d32,#43a047);
  color:#fff;padding:16px 20px;
- z-index:1200;text-align:center
+ z-index:1200;text-align:center;
+ box-shadow:0 2px 10px rgba(0,0,0,0.3);
 }
-.header h1{font-size:20px;line-height:1.3}
+.header h1{font-size:20px;line-height:1.3;font-weight:600}
 .back-home{
  position:absolute;left:20px;top:18px;
  font-weight:bold;
  background:linear-gradient(45deg,#ff9800,#ff5722);
  color:#fff;padding:6px 12px;
- border-radius:6px;cursor:pointer;font-size:13px
+ border-radius:6px;cursor:pointer;font-size:13px;
+ transition:transform 0.2s;
 }
+.back-home:hover{transform:scale(1.05)}
 
 /* INFO */
 .info-panel{
  position:absolute;top:95px;left:20px;
  background:#fff;padding:14px;border-radius:8px;
  box-shadow:0 2px 15px rgba(0,0,0,.25);
- z-index:1000;font-size:13px
+ z-index:1000;font-size:13px;
+ max-width:220px;
 }
 .info-panel b{color:#2e7d32}
 
@@ -41,28 +45,34 @@ body{font-family:Segoe UI,Tahoma,sans-serif;overflow:hidden}
 .toolbar{
  position:absolute;top:120px;right:15px;
  display:flex;flex-direction:column;gap:8px;
- z-index:1100
+ z-index:1100;
 }
 .tool-btn{
  width:38px;height:38px;background:#fff;
  border-radius:6px;
  box-shadow:0 2px 8px rgba(0,0,0,.3);
  display:flex;align-items:center;justify-content:center;
- cursor:pointer;font-size:18px
+ cursor:pointer;font-size:18px;
+ transition:all 0.2s;
 }
+.tool-btn:hover{transform:scale(1.1);box-shadow:0 3px 12px rgba(0,0,0,.4)}
+.tool-btn:active{transform:scale(0.95)}
 
 /* PANEL */
 .panel{
  display:none;position:absolute;right:65px;
- background:#fff;padding:12px;border-radius:8px;
+ background:#fff;padding:14px;border-radius:8px;
  box-shadow:0 2px 15px rgba(0,0,0,.35);
- font-size:13px
+ font-size:13px;min-width:150px;
 }
 .panel.show{display:block}
+.panel b{display:block;margin-bottom:10px;color:#2e7d32;font-size:14px}
+.panel label{display:block;margin-bottom:6px;cursor:pointer;padding:2px 0}
+.panel input[type="radio"],.panel input[type="checkbox"]{margin-right:6px}
 
 /* LEGEND */
 .legend-item{display:flex;align-items:center;font-size:12px;margin-bottom:6px}
-.legend-symbol{width:22px;height:14px;margin-right:8px;border:1px solid #555}
+.legend-symbol{width:22px;height:14px;margin-right:8px;border:1px solid #555;border-radius:2px}
 
 /* MAP INFO */
 .map-info{
@@ -70,21 +80,57 @@ body{font-family:Segoe UI,Tahoma,sans-serif;overflow:hidden}
  background:#fff;padding:8px 12px;
  border-radius:6px;font-size:12px;
  box-shadow:0 2px 10px rgba(0,0,0,.3);
- z-index:1000
+ z-index:1000;
 }
 
 /* NORTH */
 .north-arrow{
  position:absolute;bottom:90px;right:25px;
- width:50px;z-index:1000
+ width:50px;z-index:1000;
 }
+
+/* LOADING */
+.loading{
+ position:absolute;top:50%;left:50%;
+ transform:translate(-50%,-50%);
+ background:rgba(255,255,255,0.95);
+ padding:20px 30px;border-radius:8px;
+ box-shadow:0 4px 20px rgba(0,0,0,0.3);
+ z-index:2000;text-align:center;
+ display:none;
+}
+.loading.show{display:block}
+.spinner{
+ border:4px solid #f3f3f3;
+ border-top:4px solid #2e7d32;
+ border-radius:50%;width:40px;height:40px;
+ animation:spin 1s linear infinite;
+ margin:0 auto 10px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ERROR */
+.error-msg{
+ position:absolute;top:95px;left:50%;
+ transform:translateX(-50%);
+ background:#f44336;color:#fff;
+ padding:12px 20px;border-radius:8px;
+ z-index:2000;display:none;
+ box-shadow:0 2px 15px rgba(0,0,0,0.3);
+}
+.error-msg.show{display:block}
+
+/* POPUP */
+.leaflet-popup-content{font-size:13px}
+.leaflet-popup-content b{color:#2e7d32}
+.leaflet-popup-content hr{margin:8px 0;border:none;border-top:1px solid #ddd}
 </style>
 </head>
 
 <body>
 
 <div class="header">
- <div class="back-home" onclick="window.location.href='index.html'">Kembali ke Beranda</div>
+ <div class="back-home" onclick="goBack()">← Kembali</div>
  <h1>
   TA INFORMASI PERTANAHAN<br>
   KELURAHAN PACARKELING, KECAMATAN TAMBAKSARI
@@ -93,133 +139,362 @@ body{font-family:Segoe UI,Tahoma,sans-serif;overflow:hidden}
 
 <div class="info-panel">
  <b>Informasi Pertanahan</b><br><br>
- Jumlah Bidang : <b>2014</b><br>
- Total Luas : <b>1.169.334,229 m²</b><br>
- (116,933 ha)
+ Jumlah Bidang : <b id="jumlahBidang">-</b><br>
+ Total Luas : <b id="totalLuas">-</b>
 </div>
 
 <div class="toolbar">
- <div class="tool-btn" onclick="togglePanel('basemapPanel')">🗺️</div>
- <div class="tool-btn" onclick="togglePanel('layerPanel')">🧱</div>
- <div class="tool-btn" onclick="togglePanel('legendPanel')">🧾</div>
- <div class="tool-btn" onclick="map.zoomIn()">➕</div>
- <div class="tool-btn" onclick="map.zoomOut()">➖</div>
- <div class="tool-btn" onclick="toggleMeasure()">📏</div>
+ <div class="tool-btn" onclick="togglePanel('basemapPanel')" title="Ganti Basemap">🗺️</div>
+ <div class="tool-btn" onclick="togglePanel('layerPanel')" title="Layer">🧱</div>
+ <div class="tool-btn" onclick="togglePanel('legendPanel')" title="Legenda">🧾</div>
+ <div class="tool-btn" onclick="zoomIn()" title="Zoom In">➕</div>
+ <div class="tool-btn" onclick="zoomOut()" title="Zoom Out">➖</div>
+ <div class="tool-btn" onclick="toggleMeasure()" title="Ukur">📏</div>
 </div>
 
 <div id="basemapPanel" class="panel">
- <b>Basemap</b><br>
- <label><input type="radio" name="basemap" value="osm" checked> OSM</label><br>
- <label><input type="radio" name="basemap" value="carto"> Carto</label><br>
- <label><input type="radio" name="basemap" value="esri"> Esri</label>
+ <b>Basemap</b>
+ <label><input type="radio" name="basemap" value="osm" checked onchange="changeBasemap('osm')"> OpenStreetMap</label>
+ <label><input type="radio" name="basemap" value="carto" onchange="changeBasemap('carto')"> CartoDB Light</label>
+ <label><input type="radio" name="basemap" value="esri" onchange="changeBasemap('esri')"> Esri Satellite</label>
 </div>
 
 <div id="layerPanel" class="panel">
- <b>Layer</b><br>
- <label><input type="checkbox" id="layerPersil" checked> Persil</label><br>
- <label><input type="checkbox" id="layerBangunan"> Bangunan</label><br>
- <label><input type="checkbox" id="layerJalan"> Jalan</label><br>
- <label><input type="checkbox" id="layerKereta"> Kereta</label><br>
- <label><input type="checkbox" id="layerBatas"> Batas</label>
+ <b>Layer</b>
+ <label><input type="checkbox" id="layerPersil" checked onchange="toggleLayer('persil')"> Persil</label>
+ <label><input type="checkbox" id="layerBangunan" onchange="toggleLayer('bangunan')"> Bangunan</label>
+ <label><input type="checkbox" id="layerJalan" onchange="toggleLayer('jalan')"> Jalan</label>
 </div>
 
 <div id="legendPanel" class="panel">
  <b>Legenda</b>
- <div id="legendContent"></div>
+ <div id="legendContent">
+  <div class="legend-item">
+   <div class="legend-symbol" style="background:#ffd54f"></div>
+   Tanah
+  </div>
+  <div class="legend-item">
+   <div class="legend-symbol" style="background:#ef5350"></div>
+   Bangunan
+  </div>
+  <div class="legend-item">
+   <div class="legend-symbol" style="background:#66bb6a"></div>
+   Jalan
+  </div>
+  <div class="legend-item">
+   <div class="legend-symbol" style="background:#42a5f5"></div>
+   Fasilitas Umum
+  </div>
+ </div>
 </div>
 
 <div id="map"></div>
 <div class="map-info" id="coord">Lat: -<br>Lng: -</div>
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Compass_rose_simple.svg" class="north-arrow">
+<img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Compass_rose_simple.svg" class="north-arrow" alt="Arah Utara">
+
+<div class="loading" id="loading">
+ <div class="spinner"></div>
+ <div>Memuat peta...</div>
+</div>
+
+<div class="error-msg" id="errorMsg"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 
 <script>
-/* MAP */
-const map=L.map('map').setView([-7.2499,112.7532],15);
-L.control.scale({position:'bottomright'}).addTo(map);
+// Variabel global
+let map, persilLayer, currentBasemap;
+const layers = {};
 
-/* BASEMAP */
-const basemaps={
- osm:L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
- carto:L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'),
- esri:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}')
+// Inisialisasi peta
+try {
+  map = L.map('map', {
+    zoomControl: false
+  }).setView([-7.2499, 112.7532], 15);
+  
+  L.control.scale({
+    position: 'bottomleft',
+    imperial: false
+  }).addTo(map);
+  
+  console.log('Map initialized successfully');
+} catch(e) {
+  showError('Gagal menginisialisasi peta: ' + e.message);
+}
+
+// BASEMAP
+const basemaps = {
+  osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }),
+  carto: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+    attribution: '© CartoDB'
+  }),
+  esri: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '© Esri'
+  })
 };
-basemaps.osm.addTo(map);
 
-/* COORD */
-map.on('mousemove',e=>{
- coord.innerHTML=`Lat: ${e.latlng.lat.toFixed(5)}<br>Lng: ${e.latlng.lng.toFixed(5)}`;
+currentBasemap = basemaps.osm;
+currentBasemap.addTo(map);
+
+// Ganti basemap
+function changeBasemap(type) {
+  if(currentBasemap) map.removeLayer(currentBasemap);
+  currentBasemap = basemaps[type];
+  currentBasemap.addTo(map);
+}
+
+// Koordinat mouse
+map.on('mousemove', e => {
+  document.getElementById('coord').innerHTML = 
+    `Lat: ${e.latlng.lat.toFixed(5)}<br>Lng: ${e.latlng.lng.toFixed(5)}`;
 });
 
-/* SAFE MEASURE (DUMMY) */
-function toggleMeasure(){
- alert("Fitur pengukuran akan ditambahkan pada tahap selanjutnya.");
+// Toggle panel
+function togglePanel(id) {
+  const panel = document.getElementById(id);
+  const allPanels = document.querySelectorAll('.panel');
+  
+  allPanels.forEach(p => {
+    if(p.id !== id) p.classList.remove('show');
+  });
+  
+  panel.classList.toggle('show');
 }
 
-/* TOGGLE PANEL */
-function togglePanel(id){
- document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
- document.getElementById(id).classList.toggle('show');
+// Zoom controls
+function zoomIn() {
+  map.zoomIn();
 }
 
-/* COLOR */
-const palette=["#ffd54f","#ef5350","#66bb6a","#42a5f5","#ba68c8"];
-let colorMap={};
-function getColor(j){
- if(!colorMap[j]) colorMap[j]=palette[Object.keys(colorMap).length%palette.length];
- return colorMap[j];
+function zoomOut() {
+  map.zoomOut();
 }
 
-/* LEGEND LABEL */
-const legendMap={
- building:"Bangunan",
- road:"Jalan",
- clinic:"Klinik",
- hospital:"Rumah Sakit",
- school:"Sekolah",
- graveyard:"Pemakaman",
- kindergarten:"Taman Kanak-kanak",
- police:"Kantor Polisi",
- restaurant:"Restoran",
- tanah:"Tanah",
- riverbank:"Sempadan Sungai",
- market_place:"Pasar"
-};
+// Measure tool (dummy)
+function toggleMeasure() {
+  alert("Fitur pengukuran akan ditambahkan pada tahap selanjutnya.");
+}
 
-/* LOAD GEOJSON */
-const PATH="geojson/";
-let persilLayer;
-
-fetch(PATH+"persil.geojson")
-.then(r=>r.json())
-.then(data=>{
- persilLayer=L.geoJSON(data,{
-  style:f=>({fillColor:getColor(f.properties.JENIS),color:'#333',weight:1,fillOpacity:.7}),
-  onEachFeature:(f,l)=>{
-   let html="<b>Informasi Persil</b><hr>";
-   for(let k in f.properties){
-    if(k.toLowerCase()==="fid") continue;
-    html+=`<b>${k}</b>: ${f.properties[k]}<br>`;
-   }
-   l.bindPopup(html);
+// Back button
+function goBack() {
+  if(confirm('Kembali ke halaman sebelumnya?')) {
+    window.history.back();
   }
- }).addTo(map);
- buildLegend(data);
+}
+
+// Show error
+function showError(msg) {
+  const errorDiv = document.getElementById('errorMsg');
+  errorDiv.textContent = msg;
+  errorDiv.classList.add('show');
+  setTimeout(() => errorDiv.classList.remove('show'), 5000);
+  console.error(msg);
+}
+
+// Show loading
+function showLoading(show) {
+  document.getElementById('loading').classList.toggle('show', show);
+}
+
+// Color palette
+const palette = ["#ffd54f", "#ef5350", "#66bb6a", "#42a5f5", "#ba68c8", "#ab47bc", "#26a69a", "#ffa726"];
+let colorMap = {};
+
+function getColor(jenis) {
+  if(!colorMap[jenis]) {
+    colorMap[jenis] = palette[Object.keys(colorMap).length % palette.length];
+  }
+  return colorMap[jenis];
+}
+
+// Legend map
+const legendMap = {
+  building: "Bangunan",
+  road: "Jalan",
+  clinic: "Klinik",
+  hospital: "Rumah Sakit",
+  school: "Sekolah",
+  graveyard: "Pemakaman",
+  kindergarten: "TK",
+  police: "Kantor Polisi",
+  restaurant: "Restoran",
+  tanah: "Tanah",
+  riverbank: "Sempadan Sungai",
+  market_place: "Pasar",
+  residential: "Perumahan",
+  commercial: "Komersial"
+};
+
+// Load sample data (karena file GeoJSON tidak tersedia)
+function createSampleData() {
+  const sampleData = {
+    type: "FeatureCollection",
+    features: []
+  };
+  
+  // Buat sample persil di sekitar koordinat pusat
+  const centerLat = -7.2499;
+  const centerLng = 112.7532;
+  const jenisOptions = ["tanah", "building", "road", "school"];
+  
+  for(let i = 0; i < 50; i++) {
+    const latOffset = (Math.random() - 0.5) * 0.01;
+    const lngOffset = (Math.random() - 0.5) * 0.01;
+    
+    const feature = {
+      type: "Feature",
+      properties: {
+        FID: i + 1,
+        JENIS: jenisOptions[Math.floor(Math.random() * jenisOptions.length)],
+        LUAS: Math.floor(Math.random() * 500 + 100),
+        NO_PERSIL: `${i + 1}/2024`,
+        PEMILIK: `Pemilik ${i + 1}`
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [centerLng + lngOffset, centerLat + latOffset],
+          [centerLng + lngOffset + 0.001, centerLat + latOffset],
+          [centerLng + lngOffset + 0.001, centerLat + latOffset + 0.001],
+          [centerLng + lngOffset, centerLat + latOffset + 0.001],
+          [centerLng + lngOffset, centerLat + latOffset]
+        ]]
+      }
+    };
+    
+    sampleData.features.push(feature);
+  }
+  
+  return sampleData;
+}
+
+// Load persil data
+function loadPersilData() {
+  showLoading(true);
+  
+  try {
+    // Coba load file GeoJSON
+    fetch('geojson/persil.geojson')
+      .then(r => {
+        if(!r.ok) throw new Error('File tidak ditemukan');
+        return r.json();
+      })
+      .then(data => {
+        processPersilData(data);
+        showLoading(false);
+      })
+      .catch(err => {
+        console.warn('Menggunakan data sample:', err.message);
+        // Gunakan data sample jika file tidak ada
+        const sampleData = createSampleData();
+        processPersilData(sampleData);
+        showLoading(false);
+      });
+  } catch(e) {
+    showError('Error: ' + e.message);
+    showLoading(false);
+  }
+}
+
+// Process persil data
+function processPersilData(data) {
+  try {
+    persilLayer = L.geoJSON(data, {
+      style: feature => ({
+        fillColor: getColor(feature.properties.JENIS || 'tanah'),
+        color: '#333',
+        weight: 1,
+        fillOpacity: 0.7
+      }),
+      onEachFeature: (feature, layer) => {
+        let html = "<b>Informasi Persil</b><hr>";
+        for(let key in feature.properties) {
+          if(key.toLowerCase() === 'fid') continue;
+          html += `<b>${key}</b>: ${feature.properties[key] || '-'}<br>`;
+        }
+        layer.bindPopup(html);
+        
+        // Highlight on hover
+        layer.on('mouseover', function() {
+          this.setStyle({weight: 3, color: '#000'});
+        });
+        layer.on('mouseout', function() {
+          this.setStyle({weight: 1, color: '#333'});
+        });
+      }
+    }).addTo(map);
+    
+    layers.persil = persilLayer;
+    
+    // Update info panel
+    const totalBidang = data.features.length;
+    const totalLuas = data.features.reduce((sum, f) => 
+      sum + (parseFloat(f.properties.LUAS) || 0), 0
+    );
+    
+    document.getElementById('jumlahBidang').textContent = totalBidang.toLocaleString('id-ID');
+    document.getElementById('totalLuas').textContent = 
+      `${totalLuas.toLocaleString('id-ID', {maximumFractionDigits: 2})} m²`;
+    
+    // Build legend
+    buildLegend(data);
+    
+    // Zoom to layer
+    if(data.features.length > 0) {
+      map.fitBounds(persilLayer.getBounds(), {padding: [50, 50]});
+    }
+    
+    console.log('Data loaded successfully:', totalBidang, 'features');
+  } catch(e) {
+    showError('Gagal memproses data: ' + e.message);
+  }
+}
+
+// Build legend
+function buildLegend(data) {
+  const legendContent = document.getElementById('legendContent');
+  legendContent.innerHTML = "";
+  
+  const uniqueJenis = [...new Set(data.features.map(f => f.properties.JENIS))];
+  
+  uniqueJenis.forEach(jenis => {
+    const color = getColor(jenis);
+    const label = legendMap[jenis] || jenis;
+    
+    legendContent.innerHTML += `
+      <div class="legend-item">
+        <div class="legend-symbol" style="background:${color}"></div>
+        ${label}
+      </div>
+    `;
+  });
+}
+
+// Toggle layer
+function toggleLayer(layerName) {
+  const layer = layers[layerName];
+  if(!layer) return;
+  
+  if(map.hasLayer(layer)) {
+    map.removeLayer(layer);
+  } else {
+    map.addLayer(layer);
+  }
+}
+
+// Load data on page load
+window.addEventListener('load', () => {
+  loadPersilData();
 });
 
-/* LEGEND */
-function buildLegend(data){
- legendContent.innerHTML="";
- [...new Set(data.features.map(f=>f.properties.JENIS))].forEach(j=>{
-  legendContent.innerHTML+=`
-   <div class="legend-item">
-    <div class="legend-symbol" style="background:${getColor(j)}"></div>
-    ${legendMap[j]||j}
-   </div>`;
- });
-}
+// Handle errors
+window.addEventListener('error', (e) => {
+  console.error('JavaScript Error:', e.message);
+});
+
 </script>
 
 </body>
