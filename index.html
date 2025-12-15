@@ -1,3 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TA Informasi Pertanahan</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"/>
+
+<style>
+/* RESET */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Segoe UI,Tahoma,sans-serif;overflow:hidden}
+#map{width:100vw;height:100vh}
+
+/* ================= HEADER ================= */
+.header{
+ position:absolute;top:0;left:0;right:0;
+ background:linear-gradient(135deg,#2e7d32,#43a047);
+ color:#fff;
+ padding:16px 20px;
+ z-index:1200;
+ text-align:center;
+}
+.header h1{
+ font-size:20px;
+ letter-spacing:1px;
+ line-height:1.3;
+}
+.back-home{
+ position:absolute;
+ left:20px;
+ top:18px;
+ font-weight:bold;
+ background:linear-gradient(45deg,#ff9800,#ff5722);
+ color:white;
+ padding:6px 12px;
+ border-radius:6px;
+ cursor:pointer;
+ font-size:13px;
+}
+
+/* ================= INFO PANEL ================= */
+.info-panel{
+ position:absolute;
+ top:95px;
+ left:20px;
+ background:#fff;
+ padding:14px;
+ border-radius:8px;
+ box-shadow:0 2px 15px rgba(0,0,0,.25);
+ z-index:1000;
+ font-size:13px;
+}
+.info-panel b{color:#2e7d32}
+
+/* ================= TOOLBAR ================= */
+.toolbar{
+ position:absolute;
+ top:120px;
+ right:15px;
+ display:flex;
+ flex-direction:column;
+ gap:8px;
+ z-index:1100;
+}
+.tool-btn{
+ width:38px;height:38px;
+ background:#fff;
+ border-radius:6px;
+ box-shadow:0 2px 8px rgba(0,0,0,.3);
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ cursor:pointer;
+ font-size:18px;
+ user-select:none;
+}
+.tool-btn:hover{background:#e0f2f1}
+
+/* ================= PANEL TOGGLE ================= */
+.panel{
+ display:none;
+ position:absolute;
+ right:65px;
+ background:white;
+ padding:12px;
+ border-radius:8px;
+ box-shadow:0 2px 15px rgba(0,0,0,.35);
+ font-size:13px;
+}
+.panel.show{display:block}
+
+/* ================= LEGEND ================= */
+.legend-item{
+ display:flex;
+ align-items:center;
+ font-size:12px;
+ margin-bottom:6px;
+}
+.legend-symbol{
+ width:22px;
+ height:14px;
+ margin-right:8px;
+ border:1px solid #555;
+}
+
+/* ================= SCALE + COORD ================= */
+.map-info{
+ position:absolute;
+ bottom:20px;
+ right:20px;
+ background:white;
+ padding:8px 12px;
+ border-radius:6px;
+ font-size:12px;
+ box-shadow:0 2px 10px rgba(0,0,0,.3);
+ z-index:1000;
+}
+
+/* ================= NORTH ARROW ================= */
+.north-arrow{
+ position:absolute;
+ bottom:90px;
+ right:25px;
+ width:50px;
+ z-index:1000;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+ <div class="back-home" onclick="window.location.href='index.html'">
+  Kembali ke Beranda
+ </div>
+ <h1>
+  TA INFORMASI PERTANAHAN<br>
+  KELURAHAN PACARKELING, KECAMATAN TAMBAKSARI
+ </h1>
+</div>
+
+<!-- INFO -->
+<div class="info-panel">
+ <b>Informasi Pertanahan</b><br><br>
+ Jumlah Bidang : <b>2014</b><br>
+ Total Luas : <b>1.169.334,229 m²</b><br>
+ (116,933 ha)
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+ <div class="tool-btn" onclick="togglePanel('basemapPanel')">🗺️</div>
+ <div class="tool-btn" onclick="togglePanel('layerPanel')">🧱</div>
+ <div class="tool-btn" onclick="togglePanel('legendPanel')">🧾</div>
+ <div class="tool-btn" onclick="map.zoomIn()">➕</div>
+ <div class="tool-btn" onclick="map.zoomOut()">➖</div>
+ <div class="tool-btn" title="Pengukuran">📏</div>
+</div>
+
+<!-- PANELS -->
+<div id="basemapPanel" class="panel">
+ <b>Basemap</b><br>
+ <label><input type="radio" name="basemap" value="osm" checked> OSM</label><br>
+ <label><input type="radio" name="basemap" value="carto"> Carto</label><br>
+ <label><input type="radio" name="basemap" value="esri"> Esri</label>
+</div>
+
+<div id="layerPanel" class="panel">
+ <b>Layer</b><br>
+ <label><input type="checkbox" id="layerPersil" checked> Persil</label><br>
+ <label><input type="checkbox" id="layerBangunan"> Bangunan</label><br>
+ <label><input type="checkbox" id="layerJalan"> Jalan</label><br>
+ <label><input type="checkbox" id="layerKereta"> Kereta</label><br>
+ <label><input type="checkbox" id="layerBatas"> Batas</label>
+</div>
+
+<div id="legendPanel" class="panel">
+ <b>Legenda</b>
+ <div id="legendContent"></div>
+</div>
+
+<!-- MAP -->
+<div id="map"></div>
+
+<!-- COORD -->
+<div class="map-info" id="coord">Lat: -<br>Lng: -</div>
+
+<!-- NORTH -->
+<img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Compass_rose_simple.svg"
+     class="north-arrow">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
 <script>
 /* ================= MAP ================= */
 const map = L.map('map').setView([-7.2499,112.7532],15);
@@ -10,20 +206,51 @@ const basemaps={
 };
 basemaps.osm.addTo(map);
 
+/* SCALE */
+L.control.scale({position:'bottomright'}).addTo(map);
+
+/* COORD */
+map.on('mousemove',e=>{
+ document.getElementById('coord').innerHTML=
+  `Lat: ${e.latlng.lat.toFixed(5)}<br>Lng: ${e.latlng.lng.toFixed(5)}`;
+});
+
+/* ================= TOGGLE PANEL ================= */
+function togglePanel(id){
+ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+ document.getElementById(id).classList.toggle('show');
+}
+
 /* ================= ELEMENT ================= */
-const layerPersil  = document.getElementById("layerPersil");
-const layerBangunan= document.getElementById("layerBangunan");
-const layerJalan   = document.getElementById("layerJalan");
-const layerKereta  = document.getElementById("layerKereta");
-const layerBatas   = document.getElementById("layerBatas");
+const layerPersil=document.getElementById("layerPersil");
+const layerBangunan=document.getElementById("layerBangunan");
+const layerJalan=document.getElementById("layerJalan");
+const layerKereta=document.getElementById("layerKereta");
+const layerBatas=document.getElementById("layerBatas");
 
 /* ================= COLOR ================= */
-const palette=["#FFD700","#FF6B6B","#90EE90","#87CEEB","#DDA0DD"];
+const palette=["#ffd54f","#ef5350","#66bb6a","#42a5f5","#ba68c8","#ff8a65"];
 let colorMap={};
 function getColor(j){
  if(!colorMap[j]) colorMap[j]=palette[Object.keys(colorMap).length%palette.length];
  return colorMap[j];
 }
+
+/* ================= LEGEND MAP ================= */
+const legendMap={
+ building:"Bangunan",
+ road:"Jalan",
+ clinic:"Klinik",
+ hospital:"Rumah Sakit",
+ school:"Sekolah",
+ graveyard:"Pemakaman",
+ kindergarten:"Taman Kanak-kanak",
+ police:"Kantor Polisi",
+ restaurant:"Restoran",
+ tanah:"Tanah",
+ riverbank:"Sempadan Sungai",
+ market_place:"Pasar"
+};
 
 /* ================= HIGHLIGHT ================= */
 let activeLayer=null;
@@ -34,18 +261,12 @@ function highlight(l){
  activeLayer=l;
 }
 
-/* ================= PATH ================= */
+/* ================= LOAD DATA ================= */
 const PATH="geojson/";
-
-/* ================= LAYERS ================= */
 let persilLayer,bangunanLayer,jalanLayer,keretaLayer,batasLayer;
 
-/* ================= PERSIL ================= */
 fetch(PATH+"persil.geojson")
-.then(r=>{
- if(!r.ok) throw new Error("persil.geojson tidak ditemukan");
- return r.json();
-})
+.then(r=>r.json())
 .then(data=>{
  persilLayer=L.geoJSON(data,{
   style:f=>({
@@ -64,55 +285,25 @@ fetch(PATH+"persil.geojson")
 
  bangunanLayer=L.geoJSON(data,{
   filter:f=>f.properties.JENIS==="building",
-  style:{fillColor:"#FF6B6B",color:"#8B0000",weight:2,fillOpacity:.8}
+  style:{fillColor:"#ef5350",color:"#b71c1c",weight:2,fillOpacity:.8}
  });
 
- document.getElementById("totalBidang").innerText=data.features.length;
  buildLegend(data);
 });
 
-/* ================= JALAN ================= */
-fetch(PATH+"jalan.geojson")
-.then(r=>r.json())
-.then(d=>{
- jalanLayer=L.geoJSON(d,{style:{color:"#000",weight:4}}).addTo(map);
-});
-
-/* ================= KERETA ================= */
-fetch(PATH+"kereta.geojson")
-.then(r=>r.json())
-.then(d=>{
- keretaLayer=L.geoJSON(d,{style:{color:"blue",weight:3,dashArray:"8,4"}}).addTo(map);
-});
-
-/* ================= BATAS ================= */
-fetch(PATH+"batas.geojson")
-.then(r=>r.json())
-.then(d=>{
- batasLayer=L.geoJSON(d,{style:{color:"red",weight:4,fillOpacity:0}}).addTo(map);
-});
+fetch(PATH+"jalan.geojson").then(r=>r.json())
+.then(d=>jalanLayer=L.geoJSON(d,{style:{color:"#000",weight:4}}).addTo(map));
+fetch(PATH+"kereta.geojson").then(r=>r.json())
+.then(d=>keretaLayer=L.geoJSON(d,{style:{color:"blue",weight:3,dashArray:"8,4"}}).addTo(map));
+fetch(PATH+"batas.geojson").then(r=>r.json())
+.then(d=>batasLayer=L.geoJSON(d,{style:{color:"red",weight:4,fillOpacity:0}}).addTo(map));
 
 /* ================= TOGGLE ================= */
-layerPersil.onchange = e => {
- if(!persilLayer) return;
- e.target.checked ? map.addLayer(persilLayer) : map.removeLayer(persilLayer);
-};
-layerBangunan.onchange = e => {
- if(!bangunanLayer) return;
- e.target.checked ? map.addLayer(bangunanLayer) : map.removeLayer(bangunanLayer);
-};
-layerJalan.onchange = e => {
- if(!jalanLayer) return;
- e.target.checked ? map.addLayer(jalanLayer) : map.removeLayer(jalanLayer);
-};
-layerKereta.onchange = e => {
- if(!keretaLayer) return;
- e.target.checked ? map.addLayer(keretaLayer) : map.removeLayer(keretaLayer);
-};
-layerBatas.onchange = e => {
- if(!batasLayer) return;
- e.target.checked ? map.addLayer(batasLayer) : map.removeLayer(batasLayer);
-};
+layerPersil.onchange=e=>e.target.checked?map.addLayer(persilLayer):map.removeLayer(persilLayer);
+layerBangunan.onchange=e=>e.target.checked?map.addLayer(bangunanLayer):map.removeLayer(bangunanLayer);
+layerJalan.onchange=e=>e.target.checked?map.addLayer(jalanLayer):map.removeLayer(jalanLayer);
+layerKereta.onchange=e=>e.target.checked?map.addLayer(keretaLayer):map.removeLayer(keretaLayer);
+layerBatas.onchange=e=>e.target.checked?map.addLayer(batasLayer):map.removeLayer(batasLayer);
 
 /* ================= BASEMAP SWITCH ================= */
 document.querySelectorAll('input[name=basemap]').forEach(r=>{
@@ -130,8 +321,11 @@ function buildLegend(data){
   legend.innerHTML+=`
    <div class="legend-item">
     <div class="legend-symbol" style="background:${getColor(j)}"></div>
-    ${j.toUpperCase()}
+    ${legendMap[j]||j}
    </div>`;
  });
 }
 </script>
+
+</body>
+</html>
