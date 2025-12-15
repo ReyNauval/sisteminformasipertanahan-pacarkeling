@@ -8,48 +8,53 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"/>
 
 <style>
+/* RESET */
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',Tahoma,sans-serif}
+body{font-family:Segoe UI,Tahoma,sans-serif;overflow:hidden}
 #map{width:100vw;height:100vh}
 
-/* HEADER – GRADIENT BARU */
+/* ================= HEADER ================= */
 .header{
  position:absolute;top:0;left:0;right:0;
- background:linear-gradient(135deg,#1b5e20,#43a047,#81c784);
+ background:linear-gradient(135deg,#2e7d32,#43a047);
  color:#fff;
  padding:16px 20px;
- z-index:1000;
+ z-index:1200;
  text-align:center;
- box-shadow:0 3px 12px rgba(0,0,0,.35);
 }
 .header h1{
  font-size:20px;
+ letter-spacing:1px;
  line-height:1.3;
- font-weight:600;
 }
 .back-home{
- position:absolute;left:20px;top:18px;
+ position:absolute;
+ left:20px;
+ top:18px;
+ font-weight:bold;
  background:linear-gradient(45deg,#ff9800,#ff5722);
- color:#fff;
+ color:white;
  padding:6px 12px;
  border-radius:6px;
- font-size:13px;
  cursor:pointer;
+ font-size:13px;
 }
 
-/* INFO */
+/* ================= INFO PANEL ================= */
 .info-panel{
- position:absolute;top:95px;left:20px;
+ position:absolute;
+ top:95px;
+ left:20px;
  background:#fff;
  padding:14px;
  border-radius:8px;
  box-shadow:0 2px 15px rgba(0,0,0,.25);
- z-index:999;
+ z-index:1000;
  font-size:13px;
 }
-.info-panel b{color:#1b5e20}
+.info-panel b{color:#2e7d32}
 
-/* TOOLBAR */
+/* ================= TOOLBAR ================= */
 .toolbar{
  position:absolute;
  top:120px;
@@ -57,7 +62,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
  display:flex;
  flex-direction:column;
  gap:8px;
- z-index:999;
+ z-index:1100;
 }
 .tool-btn{
  width:38px;height:38px;
@@ -69,14 +74,16 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
  justify-content:center;
  cursor:pointer;
  font-size:18px;
+ user-select:none;
 }
+.tool-btn:hover{background:#e0f2f1}
 
-/* PANEL */
+/* ================= PANEL TOGGLE ================= */
 .panel{
  display:none;
  position:absolute;
  right:65px;
- background:#fff;
+ background:white;
  padding:12px;
  border-radius:8px;
  box-shadow:0 2px 15px rgba(0,0,0,.35);
@@ -84,7 +91,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
 }
 .panel.show{display:block}
 
-/* LEGEND */
+/* ================= LEGEND ================= */
 .legend-item{
  display:flex;
  align-items:center;
@@ -92,63 +99,82 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
  margin-bottom:6px;
 }
 .legend-symbol{
- width:22px;height:14px;
+ width:22px;
+ height:14px;
  margin-right:8px;
  border:1px solid #555;
 }
 
-/* COORD */
+/* ================= SCALE + COORD ================= */
 .map-info{
  position:absolute;
  bottom:20px;
  right:20px;
- background:#fff;
+ background:white;
  padding:8px 12px;
  border-radius:6px;
  font-size:12px;
  box-shadow:0 2px 10px rgba(0,0,0,.3);
- z-index:999;
+ z-index:1000;
 }
 
-/* NORTH */
+/* ================= NORTH ARROW ================= */
 .north-arrow{
  position:absolute;
  bottom:90px;
  right:25px;
  width:50px;
- z-index:999;
+ z-index:1000;
 }
 </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
- <div class="back-home" onclick="history.back()">← Kembali</div>
+ <div class="back-home" onclick="window.location.href='index.html'">
+  Kembali ke Beranda
+ </div>
  <h1>
   TA INFORMASI PERTANAHAN<br>
   KELURAHAN PACARKELING, KECAMATAN TAMBAKSARI
  </h1>
 </div>
 
+<!-- INFO -->
 <div class="info-panel">
  <b>Informasi Pertanahan</b><br><br>
- Jumlah Bidang : <b id="jumlahBidang">-</b><br>
- Total Luas : <b id="totalLuas">-</b>
+ Jumlah Bidang : <b>2014</b><br>
+ Total Luas : <b>1.169.334,229 m²</b><br>
+ (116,933 ha)
 </div>
 
+<!-- TOOLBAR -->
 <div class="toolbar">
  <div class="tool-btn" onclick="togglePanel('basemapPanel')">🗺️</div>
+ <div class="tool-btn" onclick="togglePanel('layerPanel')">🧱</div>
  <div class="tool-btn" onclick="togglePanel('legendPanel')">🧾</div>
  <div class="tool-btn" onclick="map.zoomIn()">➕</div>
  <div class="tool-btn" onclick="map.zoomOut()">➖</div>
+ <div class="tool-btn" title="Pengukuran">📏</div>
 </div>
 
+<!-- PANELS -->
 <div id="basemapPanel" class="panel">
  <b>Basemap</b><br>
- <label><input type="radio" name="basemap" checked onclick="switchBase('osm')"> OSM</label><br>
- <label><input type="radio" name="basemap" onclick="switchBase('carto')"> Carto</label><br>
- <label><input type="radio" name="basemap" onclick="switchBase('esri')"> Esri</label>
+ <label><input type="radio" name="basemap" value="osm" checked> OSM</label><br>
+ <label><input type="radio" name="basemap" value="carto"> Carto</label><br>
+ <label><input type="radio" name="basemap" value="esri"> Esri</label>
+</div>
+
+<div id="layerPanel" class="panel">
+ <b>Layer</b><br>
+ <label><input type="checkbox" id="layerPersil" checked> Persil</label><br>
+ <label><input type="checkbox" id="layerBangunan"> Bangunan</label><br>
+ <label><input type="checkbox" id="layerJalan"> Jalan</label><br>
+ <label><input type="checkbox" id="layerKereta"> Kereta</label><br>
+ <label><input type="checkbox" id="layerBatas"> Batas</label>
 </div>
 
 <div id="legendPanel" class="panel">
@@ -156,80 +182,146 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
  <div id="legendContent"></div>
 </div>
 
+<!-- MAP -->
 <div id="map"></div>
+
+<!-- COORD -->
 <div class="map-info" id="coord">Lat: -<br>Lng: -</div>
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Compass_rose_simple.svg" class="north-arrow">
+<!-- NORTH -->
+<img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Compass_rose_simple.svg"
+     class="north-arrow">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 
 <script>
-/* MAP */
+/* ================= MAP ================= */
 const map = L.map('map').setView([-7.2499,112.7532],15);
-L.control.scale({imperial:false}).addTo(map);
 
-/* BASEMAP */
+/* ================= BASEMAP ================= */
 const basemaps={
  osm:L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'),
  carto:L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'),
  esri:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}')
 };
 basemaps.osm.addTo(map);
-let currentBase=basemaps.osm;
 
-function switchBase(k){
- map.removeLayer(currentBase);
- currentBase=basemaps[k];
- currentBase.addTo(map);
-}
+/* SCALE */
+L.control.scale({position:'bottomright'}).addTo(map);
 
 /* COORD */
 map.on('mousemove',e=>{
- coord.innerHTML=`Lat: ${e.latlng.lat.toFixed(5)}<br>Lng: ${e.latlng.lng.toFixed(5)}`;
+ document.getElementById('coord').innerHTML=
+  `Lat: ${e.latlng.lat.toFixed(5)}<br>Lng: ${e.latlng.lng.toFixed(5)}`;
 });
 
-/* TOGGLE PANEL */
+/* ================= TOGGLE PANEL ================= */
 function togglePanel(id){
  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
  document.getElementById(id).classList.toggle('show');
 }
 
-/* COLOR */
-const palette=["#ffd54f","#ef5350","#66bb6a","#42a5f5","#ab47bc"];
-let colorMap={};
-const getColor=j=>colorMap[j]||(colorMap[j]=palette[Object.keys(colorMap).length%palette.length]);
+/* ================= ELEMENT ================= */
+const layerPersil=document.getElementById("layerPersil");
+const layerBangunan=document.getElementById("layerBangunan");
+const layerJalan=document.getElementById("layerJalan");
+const layerKereta=document.getElementById("layerKereta");
+const layerBatas=document.getElementById("layerBatas");
 
-/* LOAD GEOJSON */
-fetch('geojson/persil.geojson')
+/* ================= COLOR ================= */
+const palette=["#ffd54f","#ef5350","#66bb6a","#42a5f5","#ba68c8","#ff8a65"];
+let colorMap={};
+function getColor(j){
+ if(!colorMap[j]) colorMap[j]=palette[Object.keys(colorMap).length%palette.length];
+ return colorMap[j];
+}
+
+/* ================= LEGEND MAP ================= */
+const legendMap={
+ building:"Bangunan",
+ road:"Jalan",
+ clinic:"Klinik",
+ hospital:"Rumah Sakit",
+ school:"Sekolah",
+ graveyard:"Pemakaman",
+ kindergarten:"Taman Kanak-kanak",
+ police:"Kantor Polisi",
+ restaurant:"Restoran",
+ tanah:"Tanah",
+ riverbank:"Sempadan Sungai",
+ market_place:"Pasar"
+};
+
+/* ================= HIGHLIGHT ================= */
+let activeLayer=null;
+function highlight(l){
+ if(activeLayer) persilLayer.resetStyle(activeLayer);
+ l.setStyle({weight:4,color:'#000',fillOpacity:.9});
+ map.fitBounds(l.getBounds());
+ activeLayer=l;
+}
+
+/* ================= LOAD DATA ================= */
+const PATH="geojson/";
+let persilLayer,bangunanLayer,jalanLayer,keretaLayer,batasLayer;
+
+fetch(PATH+"persil.geojson")
 .then(r=>r.json())
 .then(data=>{
- const layer=L.geoJSON(data,{
-  style:f=>({fillColor:getColor(f.properties.JENIS),color:'#333',weight:1,fillOpacity:.7}),
+ persilLayer=L.geoJSON(data,{
+  style:f=>({
+   fillColor:getColor(f.properties.JENIS),
+   color:'#333',weight:1,fillOpacity:.7
+  }),
   onEachFeature:(f,l)=>{
-   let html="<b>Informasi Persil</b><hr>";
+   let html="";
    for(let k in f.properties){
-    if(k.toLowerCase()==='fid') continue;
     html+=`<b>${k}</b>: ${f.properties[k]}<br>`;
    }
    l.bindPopup(html);
+   l.on('click',()=>highlight(l));
   }
  }).addTo(map);
 
- document.getElementById('jumlahBidang').textContent=data.features.length;
- document.getElementById('totalLuas').textContent='-';
+ bangunanLayer=L.geoJSON(data,{
+  filter:f=>f.properties.JENIS==="building",
+  style:{fillColor:"#ef5350",color:"#b71c1c",weight:2,fillOpacity:.8}
+ });
 
  buildLegend(data);
- map.fitBounds(layer.getBounds(),{padding:[50,50]});
 });
 
-/* LEGEND */
+fetch(PATH+"jalan.geojson").then(r=>r.json())
+.then(d=>jalanLayer=L.geoJSON(d,{style:{color:"#000",weight:4}}).addTo(map));
+fetch(PATH+"kereta.geojson").then(r=>r.json())
+.then(d=>keretaLayer=L.geoJSON(d,{style:{color:"blue",weight:3,dashArray:"8,4"}}).addTo(map));
+fetch(PATH+"batas.geojson").then(r=>r.json())
+.then(d=>batasLayer=L.geoJSON(d,{style:{color:"red",weight:4,fillOpacity:0}}).addTo(map));
+
+/* ================= TOGGLE ================= */
+layerPersil.onchange=e=>e.target.checked?map.addLayer(persilLayer):map.removeLayer(persilLayer);
+layerBangunan.onchange=e=>e.target.checked?map.addLayer(bangunanLayer):map.removeLayer(bangunanLayer);
+layerJalan.onchange=e=>e.target.checked?map.addLayer(jalanLayer):map.removeLayer(jalanLayer);
+layerKereta.onchange=e=>e.target.checked?map.addLayer(keretaLayer):map.removeLayer(keretaLayer);
+layerBatas.onchange=e=>e.target.checked?map.addLayer(batasLayer):map.removeLayer(batasLayer);
+
+/* ================= BASEMAP SWITCH ================= */
+document.querySelectorAll('input[name=basemap]').forEach(r=>{
+ r.onchange=()=>{
+  Object.values(basemaps).forEach(b=>map.removeLayer(b));
+  basemaps[r.value].addTo(map);
+ };
+});
+
+/* ================= LEGEND ================= */
 function buildLegend(data){
- legendContent.innerHTML='';
+ const legend=document.getElementById("legendContent");
+ legend.innerHTML="";
  [...new Set(data.features.map(f=>f.properties.JENIS))].forEach(j=>{
-  legendContent.innerHTML+=`
+  legend.innerHTML+=`
    <div class="legend-item">
     <div class="legend-symbol" style="background:${getColor(j)}"></div>
-    ${j}
+    ${legendMap[j]||j}
    </div>`;
  });
 }
