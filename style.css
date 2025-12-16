@@ -189,6 +189,9 @@ nav a:hover {
 .section-dark {
   background: #020617;
 }
+section {
+  scroll-margin-top: 112px; /* navbar (±48px) + padding atas */
+}
 
 /* FEATURES */
 .feature-grid {
@@ -292,3 +295,4 @@ footer {
 html {
   scroll-behavior: smooth;
 }
+
